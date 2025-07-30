@@ -29,12 +29,13 @@ Talk to it, command it, and let it make your digital life smarter, faster, and m
 
 ⸻
 
-🚧 Future Upgrades (Coming Soon…)
+📁 Folder Structure
 
-✅ Task reminders ⏰
-✅ Voice authentication 🔐
-✅ Offline AI engine ⚡
-✅ Custom wake word 👂
+├── api_ai.py          # Custom module for AI response (e.g., Gemini or OpenAI)
+├── musicLib.py        # Dictionary of songs and URLs
+├── main.py            # Main voice assistant script (shared above)
+├── .env               # For storing API keys securely
+└── README.md          # You're reading it!
 
 ⸻
 
@@ -43,3 +44,13 @@ Ready to experience voice-powered automation?
 
 🧠 Smart. Fast. Personal.
 Welcome to the future of desktop automation 💻✨
+
+⸻
+
+🙋‍♂️ Author
+
+Saksham Chauhan
+Passionate about 🤖 AI, 🐍 Python, and 🛠️ automation.
+Always building something cool, one line of code at a time ⚡💻
+
+📫 LinkedIn:SAKSHAM CHAUHAN | ✨ GitHub:Sakshamxx
