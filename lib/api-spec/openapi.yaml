@@ -3,13 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: JARVIS AI Voice Assistant API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: chat
+    description: AI chat and voice commands
+  - name: music
+    description: Music playback
+  - name: news
+    description: News fetching
+  - name: history
+    description: Command history and activity
+
 paths:
   /healthz:
     get:
@@ -24,7 +35,235 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user info
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /chat:
+    post:
+      operationId: sendChat
+      tags: [chat]
+      summary: Send a text message to JARVIS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /voice-command:
+    post:
+      operationId: voiceCommand
+      tags: [chat]
+      summary: Process a voice command (text transcript)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoiceCommandRequest"
+      responses:
+        "200":
+          description: Command result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoiceCommandResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /play-music:
+    post:
+      operationId: playMusic
+      tags: [music]
+      summary: Get a music link by song name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayMusicRequest"
+      responses:
+        "200":
+          description: Music link found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMusicResponse"
+        "404":
+          description: Song not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /music/library:
+    get:
+      operationId: getMusicLibrary
+      tags: [music]
+      summary: Get all available songs in the library
+      responses:
+        "200":
+          description: List of songs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MusicLibraryResponse"
+
+  /news:
+    get:
+      operationId: getNews
+      tags: [news]
+      summary: Get top news headlines
+      parameters:
+        - name: country
+          in: query
+          schema:
+            type: string
+            default: us
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: News articles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsResponse"
+        "503":
+          description: News API unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /history:
+    get:
+      operationId: getHistory
+      tags: [history]
+      summary: Get command history
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Command history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoryResponse"
+
+  /history/stats:
+    get:
+      operationId: getActivityStats
+      tags: [history]
+      summary: Get activity statistics
+      responses:
+        "200":
+          description: Activity stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityStats"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +273,247 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    AuthRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - createdAt
+
+    ChatRequest:
+      type: object
+      properties:
+        message:
+          type: string
+        sessionId:
+          type: ["string", "null"]
+      required:
+        - message
+
+    ChatResponse:
+      type: object
+      properties:
+        reply:
+          type: string
+        sessionId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - reply
+        - sessionId
+        - timestamp
+
+    VoiceCommandRequest:
+      type: object
+      properties:
+        command:
+          type: string
+      required:
+        - command
+
+    VoiceCommandResponse:
+      type: object
+      properties:
+        action:
+          type: string
+        reply:
+          type: string
+        data:
+          type: ["object", "null"]
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - action
+        - reply
+        - timestamp
+
+    PlayMusicRequest:
+      type: object
+      properties:
+        songName:
+          type: string
+      required:
+        - songName
+
+    PlayMusicResponse:
+      type: object
+      properties:
+        songName:
+          type: string
+        url:
+          type: string
+        found:
+          type: boolean
+      required:
+        - songName
+        - url
+        - found
+
+    SongEntry:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+      required:
+        - name
+        - url
+
+    MusicLibraryResponse:
+      type: object
+      properties:
+        songs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SongEntry"
+        total:
+          type: integer
+      required:
+        - songs
+        - total
+
+    NewsArticle:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        url:
+          type: string
+        source:
+          type: string
+        publishedAt:
+          type: string
+      required:
+        - title
+        - url
+        - source
+        - publishedAt
+
+    NewsResponse:
+      type: object
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/NewsArticle"
+        total:
+          type: integer
+      required:
+        - articles
+        - total
+
+    CommandHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        input:
+          type: string
+        response:
+          type: string
+        action:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - input
+        - response
+        - createdAt
+
+    HistoryResponse:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommandHistoryEntry"
+        total:
+          type: integer
+      required:
+        - entries
+        - total
+
+    ActivityStats:
+      type: object
+      properties:
+        totalCommands:
+          type: integer
+        totalChats:
+          type: integer
+        totalVoiceCommands:
+          type: integer
+        totalMusicPlayed:
+          type: integer
+        totalNewsRequests:
+          type: integer
+        mostUsedCommands:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommandCount"
+      required:
+        - totalCommands
+        - totalChats
+        - totalVoiceCommands
+        - totalMusicPlayed
+        - totalNewsRequests
+        - mostUsedCommands
+
+    CommandCount:
+      type: object
+      properties:
+        action:
+          type: string
+        count:
+          type: integer
+      required:
+        - action
+        - count
