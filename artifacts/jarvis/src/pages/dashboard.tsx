@@ -30,6 +30,7 @@ const QUICK_LINKS = [
   { name: "Notion", icon: "N", url: "https://notion.so", color: "text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/60" },
   { name: "Spotify", icon: "♪", url: "https://open.spotify.com", color: "text-green-400 border-green-400/30 hover:bg-green-400/10 hover:border-green-400/60" },
   { name: "WhatsApp", icon: "W", url: "https://web.whatsapp.com", color: "text-green-300 border-green-300/30 hover:bg-green-300/10 hover:border-green-300/60" },
+  { name: "HackerBlocks", icon: "⚡", url: "https://hack.codingblocks.com/app/", color: "text-orange-400 border-orange-400/30 hover:bg-orange-400/10 hover:border-orange-400/60" },
 ];
 
 export default function Dashboard() {
@@ -81,7 +82,7 @@ export default function Dashboard() {
             <div className="text-xs text-muted-foreground mt-1 font-mono">{date}</div>
           </div>
           <div className="text-[10px] font-mono text-primary/30 uppercase tracking-widest text-right">
-            <div>Grok AI · Online</div>
+            <div>Gemini AI · Online</div>
             <div className="mt-1">All Systems Nominal</div>
           </div>
         </div>
@@ -92,7 +93,7 @@ export default function Dashboard() {
         <div className="text-[10px] text-primary/50 uppercase tracking-widest mb-3 font-mono flex items-center gap-2">
           <Globe className="w-3 h-3" /> Quick Launch
         </div>
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
           {QUICK_LINKS.map((link, i) => (
             <motion.a
               key={link.name}
