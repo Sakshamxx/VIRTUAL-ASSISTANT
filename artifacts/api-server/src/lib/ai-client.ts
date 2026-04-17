@@ -1,23 +1,38 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
-const JARVIS_SYSTEM_PROMPT = `You are JARVIS (Just A Rather Very Intelligent System), a highly advanced AI assistant built by SAKNS — sharp, precise, witty, and deeply knowledgeable. You run on Grok by xAI.
+const JARVIS_SYSTEM_PROMPT = `You are JARVIS (Just A Rather Very Intelligent System), a highly advanced personal AI assistant built exclusively for Saksham Chauhan (alias: SAKNS). You are powered by Google Gemini.
 
-Core traits:
-- Respond concisely but thoroughly. Never pad answers unnecessarily.
-- Use markdown for formatting when it helps clarity (headers, bullets, code blocks, tables).
-- Be proactive: if you know something relevant the user didn't ask, mention it briefly.
-- For coding questions, always provide working code with brief explanations.
-- For factual questions, be accurate and admit limitations clearly.
-- Maintain full conversation context — remember everything said earlier in the session.
-- Personality: calm confidence, occasional dry wit, always helpful.
-- When asked about time, always mention both the local server time AND India Standard Time (IST = UTC+5:30).
-- You can search the web, open websites, play music — but those are handled by separate command processors. Focus on intelligent answers.
+## Core Identity
+- You are Saksham's personal AI — sharp, witty, loyal, and deeply knowledgeable.
+- Address Saksham directly and personally. You know him well.
+- Always remember everything shared in this conversation — names, tasks, preferences, facts he tells you.
 
-You are running as the personal AI assistant of your operator. Treat them as your primary user.`;
+## Personality
+- Calm confidence with dry wit. Brief but thorough. Never pad answers.
+- If Saksham tells you something personal (a fact, preference, task, plan) — store it mentally and reference it naturally later.
+- You are proactive: if you know something relevant he didn't ask, mention it briefly.
+
+## Formatting
+- Use markdown: headers, bullets, **bold**, code blocks, tables — wherever it helps.
+- For coding questions: always provide working code with brief explanations.
+- For factual questions: be accurate, admit limitations clearly.
+
+## Time & Location
+- Always use IST (India Standard Time, UTC+5:30) when mentioning time or dates.
+- Saksham is based in India.
+
+## Capabilities
+- Intelligent conversation and Q&A
+- Coding help (any language)
+- Planning, brainstorming, analysis
+- Remember personal info Saksham shares during the session
+- Commands like "open YouTube", "search for X", "play music" are handled separately — just acknowledge them.
+
+You are Saksham's most trusted digital companion. Make every response count.`;
 
 type ConversationMessage = {
-  role: "user" | "assistant";
-  content: string;
+  role: "user" | "model";
+  parts: [{ text: string }];
 };
 
 const sessions = new Map<string, ConversationMessage[]>();
@@ -29,50 +44,61 @@ function getSession(sessionId: string): ConversationMessage[] {
   return sessions.get(sessionId)!;
 }
 
-export function addToSession(sessionId: string, role: "user" | "assistant", content: string) {
+export function addToSession(sessionId: string, role: "user" | "model", content: string) {
   const history = getSession(sessionId);
-  history.push({ role, content });
+  history.push({ role, parts: [{ text: content }] });
+  // Keep last 40 messages (20 exchanges)
   if (history.length > 40) history.splice(0, 2);
 }
 
 export async function getAIResponse(sessionId: string, userMessage: string): Promise<string> {
-  const apiKey = process.env["GROK_API_KEY"];
+  const apiKey = process.env["GEMINI_API_KEY"];
 
   if (!apiKey) {
-    return `**JARVIS AI not fully initialized.**\n\nTo enable intelligent responses, add your \`GROK_API_KEY\` to environment secrets.\n\nCurrently running in limited mode — basic commands still work.`;
+    return `**JARVIS AI not initialized.**\n\nAdd your \`GEMINI_API_KEY\` to environment secrets to enable intelligent responses.\n\nBasic commands (open sites, music, etc.) still work.`;
   }
 
-  const client = new OpenAI({
-    apiKey,
-    baseURL: "https://api.x.ai/v1",
-  });
-
   const history = getSession(sessionId);
-  addToSession(sessionId, "user", userMessage);
 
   try {
-    const response = await client.chat.completions.create({
-      model: "grok-3",
-      max_tokens: 1500,
-      messages: [
-        { role: "system", content: JARVIS_SYSTEM_PROMPT },
-        ...history,
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      systemInstruction: JARVIS_SYSTEM_PROMPT,
+      safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
       ],
     });
 
-    const reply = response.choices[0]?.message?.content ?? "I was unable to generate a response.";
-    addToSession(sessionId, "assistant", reply);
+    const chat = model.startChat({ history });
+
+    // Add user message to session
+    addToSession(sessionId, "user", userMessage);
+
+    const result = await chat.sendMessage(userMessage);
+    const reply = result.response.text();
+
+    if (!reply) {
+      return "I was unable to generate a response. Please try again.";
+    }
+
+    // Add model reply to session
+    addToSession(sessionId, "model", reply);
+
     return reply;
   } catch (err: unknown) {
     const error = err as { message?: string; status?: number; code?: string };
-    if (error?.status === 401) {
-      return "**Authentication failed.** Your `GROK_API_KEY` appears to be invalid. Please check and update it.";
+    if (error?.message?.includes("API_KEY_INVALID") || error?.message?.includes("401")) {
+      return "**Authentication failed.** Your `GEMINI_API_KEY` appears to be invalid. Please check it in your secrets.";
     }
-    if (error?.status === 429) {
+    if (error?.message?.includes("429") || error?.message?.includes("quota")) {
       return "**Rate limit reached.** Please wait a moment before sending another request.";
     }
     const msg = error?.message ?? "Unknown error";
-    return `**Error communicating with Grok AI:** ${msg}`;
+    return `**Error communicating with Gemini AI:** ${msg}`;
   }
 }
 
