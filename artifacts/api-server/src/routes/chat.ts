@@ -7,7 +7,7 @@ import {
   VoiceCommandResponse,
 } from "@workspace/api-zod";
 import { processCommand } from "../lib/command-processor.js";
-import { getClaudeResponse, addToSession } from "../lib/ai-client.js";
+import { getAIResponse, addToSession } from "../lib/ai-client.js";
 import { v4 as uuidv4 } from "uuid";
 
 const router: IRouter = Router();
@@ -23,18 +23,14 @@ router.post("/chat", async (req, res): Promise<void> => {
   const session = sessionId ?? uuidv4();
   const now = new Date();
 
-  // First check if it's a deterministic command
   const result = processCommand(message);
-
   let reply: string;
   let action = result.action;
 
   if (result.action === "ai_chat" || result.reply === "") {
-    // Send to Claude
-    reply = await getClaudeResponse(session, message);
+    reply = await getAIResponse(session, message);
     action = "ai_chat";
   } else {
-    // Use the command processor result and still add to Claude context
     reply = result.reply;
     addToSession(session, "user", message);
     addToSession(session, "assistant", reply);
@@ -47,13 +43,7 @@ router.post("/chat", async (req, res): Promise<void> => {
     action,
   });
 
-  res.json(
-    SendChatResponse.parse({
-      reply,
-      sessionId: session,
-      timestamp: now.toISOString(),
-    }),
-  );
+  res.json(SendChatResponse.parse({ reply, sessionId: session, timestamp: now.toISOString() }));
 });
 
 router.post("/voice-command", async (req, res): Promise<void> => {
@@ -66,14 +56,12 @@ router.post("/voice-command", async (req, res): Promise<void> => {
   const { command } = parsed.data;
   const result = processCommand(command);
   const now = new Date();
-
   let reply = result.reply;
   let action = result.action;
 
-  // If command falls through to AI, call Claude
   if (result.action === "ai_chat" || reply === "") {
     const session = uuidv4();
-    reply = await getClaudeResponse(session, command);
+    reply = await getAIResponse(session, command);
     action = "ai_chat";
   }
 
@@ -84,14 +72,12 @@ router.post("/voice-command", async (req, res): Promise<void> => {
     action,
   });
 
-  res.json(
-    VoiceCommandResponse.parse({
-      action,
-      reply,
-      data: result.data ?? null,
-      timestamp: now.toISOString(),
-    }),
-  );
+  res.json(VoiceCommandResponse.parse({
+    action,
+    reply,
+    data: result.data ?? null,
+    timestamp: now.toISOString(),
+  }));
 });
 
 export default router;

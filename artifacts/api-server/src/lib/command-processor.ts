@@ -22,7 +22,7 @@ const SITE_MAP: Record<string, { url: string; name: string }> = {
   facebook: { url: "https://facebook.com", name: "Facebook" },
   linkedin: { url: "https://linkedin.com", name: "LinkedIn" },
   twitter: { url: "https://twitter.com", name: "Twitter" },
-  x: { url: "https://x.com", name: "X" },
+  x: { url: "https://x.com", name: "X (Twitter)" },
   instagram: { url: "https://instagram.com", name: "Instagram" },
   reddit: { url: "https://reddit.com", name: "Reddit" },
   github: { url: "https://github.com", name: "GitHub" },
@@ -34,14 +34,17 @@ const SITE_MAP: Record<string, { url: string; name: string }> = {
   drive: { url: "https://drive.google.com", name: "Google Drive" },
   "google drive": { url: "https://drive.google.com", name: "Google Drive" },
   docs: { url: "https://docs.google.com", name: "Google Docs" },
+  "google docs": { url: "https://docs.google.com", name: "Google Docs" },
   sheets: { url: "https://sheets.google.com", name: "Google Sheets" },
+  "google sheets": { url: "https://sheets.google.com", name: "Google Sheets" },
   slides: { url: "https://slides.google.com", name: "Google Slides" },
   calendar: { url: "https://calendar.google.com", name: "Google Calendar" },
   "google calendar": { url: "https://calendar.google.com", name: "Google Calendar" },
   meet: { url: "https://meet.google.com", name: "Google Meet" },
+  "google meet": { url: "https://meet.google.com", name: "Google Meet" },
   netflix: { url: "https://netflix.com", name: "Netflix" },
-  spotify: { url: "https://spotify.com", name: "Spotify" },
-  amazon: { url: "https://amazon.com", name: "Amazon" },
+  spotify: { url: "https://open.spotify.com", name: "Spotify" },
+  amazon: { url: "https://amazon.in", name: "Amazon" },
   flipkart: { url: "https://flipkart.com", name: "Flipkart" },
   whatsapp: { url: "https://web.whatsapp.com", name: "WhatsApp" },
   telegram: { url: "https://web.telegram.org", name: "Telegram" },
@@ -58,7 +61,6 @@ const SITE_MAP: Record<string, { url: string; name: string }> = {
   replit: { url: "https://replit.com", name: "Replit" },
   twitch: { url: "https://twitch.tv", name: "Twitch" },
   pinterest: { url: "https://pinterest.com", name: "Pinterest" },
-  snapchat: { url: "https://snapchat.com", name: "Snapchat" },
   tiktok: { url: "https://tiktok.com", name: "TikTok" },
   zoom: { url: "https://zoom.us", name: "Zoom" },
   teams: { url: "https://teams.microsoft.com", name: "Microsoft Teams" },
@@ -66,46 +68,77 @@ const SITE_MAP: Record<string, { url: string; name: string }> = {
   onedrive: { url: "https://onedrive.live.com", name: "OneDrive" },
   word: { url: "https://office.live.com/start/Word.aspx", name: "Microsoft Word" },
   excel: { url: "https://office.live.com/start/Excel.aspx", name: "Microsoft Excel" },
-  powerpoint: { url: "https://office.live.com/start/PowerPoint.aspx", name: "Microsoft PowerPoint" },
+  powerpoint: { url: "https://office.live.com/start/PowerPoint.aspx", name: "PowerPoint" },
   trello: { url: "https://trello.com", name: "Trello" },
-  jira: { url: "https://www.atlassian.com/software/jira", name: "Jira" },
   canva: { url: "https://canva.com", name: "Canva" },
-  "leetcode": { url: "https://leetcode.com", name: "LeetCode" },
-  "hackerrank": { url: "https://hackerrank.com", name: "HackerRank" },
-  "codeforces": { url: "https://codeforces.com", name: "Codeforces" },
-  "coursera": { url: "https://coursera.org", name: "Coursera" },
-  "udemy": { url: "https://udemy.com", name: "Udemy" },
+  leetcode: { url: "https://leetcode.com", name: "LeetCode" },
+  hackerrank: { url: "https://hackerrank.com", name: "HackerRank" },
+  coursera: { url: "https://coursera.org", name: "Coursera" },
+  udemy: { url: "https://udemy.com", name: "Udemy" },
   "khan academy": { url: "https://khanacademy.org", name: "Khan Academy" },
-  "news": { url: "https://news.google.com", name: "Google News" },
-  "bbc": { url: "https://bbc.com/news", name: "BBC News" },
-  "cnn": { url: "https://cnn.com", name: "CNN" },
-  "paypal": { url: "https://paypal.com", name: "PayPal" },
+  bbc: { url: "https://bbc.com/news", name: "BBC News" },
+  cnn: { url: "https://cnn.com", name: "CNN" },
+  paypal: { url: "https://paypal.com", name: "PayPal" },
+  paytm: { url: "https://paytm.com", name: "Paytm" },
+  snapchat: { url: "https://snapchat.com", name: "Snapchat" },
+  jira: { url: "https://www.atlassian.com/software/jira", name: "Jira" },
+  "vs code": { url: "https://vscode.dev", name: "VS Code (Web)" },
+  vscode: { url: "https://vscode.dev", name: "VS Code (Web)" },
+  "google news": { url: "https://news.google.com", name: "Google News" },
 };
 
 function matchSite(cmd: string): { url: string; name: string } | null {
-  for (const [key, val] of Object.entries(SITE_MAP)) {
+  const sorted = Object.entries(SITE_MAP).sort((a, b) => b[0].length - a[0].length);
+  for (const [key, val] of sorted) {
     if (cmd.includes(key)) return val;
   }
   return null;
 }
 
+function getISTTime(): string {
+  return new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+function getISTDate(): string {
+  return new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export function processCommand(command: string): CommandResult {
   const cmd = command.toLowerCase().trim();
 
-  // ── Time / Date ──────────────────────────────────────────────────────────
-  if (cmd.match(/\b(what(?:'s| is) the time|current time|time now|what time)\b/)) {
-    const time = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    return { action: "time_date", reply: `The current time is **${time}**.` };
+  // ── Time ──────────────────────────────────────────────────────────────────
+  if (cmd.match(/\b(what(?:'s| is) the time|current time|time now|what time|time in india|ist time)\b/)) {
+    const istTime = getISTTime();
+    return {
+      action: "time_date",
+      reply: `🕐 Current time in **India (IST)**: **${istTime}**`,
+    };
   }
 
-  if (cmd.match(/\b(what(?:'s| is) (?:today'?s? )?date|today(?:'s date)?|what day)\b/)) {
-    const date = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    return { action: "time_date", reply: `Today is **${date}**.` };
+  // ── Date ──────────────────────────────────────────────────────────────────
+  if (cmd.match(/\b(what(?:'s| is) (?:today'?s? )?date|today(?:'s date)?|what day|current date)\b/)) {
+    const istDate = getISTDate();
+    return {
+      action: "time_date",
+      reply: `📅 Today in **India (IST)**: **${istDate}**`,
+    };
   }
 
-  // ── Open URL ─────────────────────────────────────────────────────────────
-  if (cmd.startsWith("open ") || cmd.startsWith("launch ") || cmd.startsWith("go to ") || cmd.startsWith("navigate to ")) {
-    const after = cmd.replace(/^(open|launch|go to|navigate to)\s+/, "").trim();
+  // ── Open URL ──────────────────────────────────────────────────────────────
+  if (cmd.match(/^(open|launch|go to|navigate to|show me)\s+/)) {
+    const after = cmd.replace(/^(open|launch|go to|navigate to|show me)\s+/, "").trim();
     const site = matchSite(after);
     if (site) {
       return {
@@ -114,95 +147,67 @@ export function processCommand(command: string): CommandResult {
         data: { url: site.url, name: site.name },
       };
     }
-    // Try opening as a URL directly
-    if (after.includes(".com") || after.includes(".org") || after.includes(".net") || after.includes(".io")) {
+    if (after.match(/\.(com|org|net|io|in|co|dev|app)/)) {
       const url = after.startsWith("http") ? after : `https://${after}`;
       return {
         action: "open_url",
-        reply: `Opening **${after}** for you.`,
+        reply: `Opening **${after}**.`,
         data: { url, name: after },
       };
     }
   }
 
   // ── Web Search ────────────────────────────────────────────────────────────
-  const searchMatch = cmd.match(/^(?:search|google|look up|find|search for|search on google|search google for)\s+(.+)$/);
-  if (searchMatch) {
-    const query = searchMatch[1];
-    const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  const googleSearch = cmd.match(/^(?:search|google|look up|find|search for|search on google|search google for)\s+(.+)$/);
+  if (googleSearch) {
+    const query = googleSearch[1];
     return {
       action: "search_web",
       reply: `Searching Google for **"${query}"**.`,
-      data: { url, query },
+      data: { url: `https://www.google.com/search?q=${encodeURIComponent(query)}`, query },
     };
   }
 
-  const ytSearchMatch = cmd.match(/^(?:search on youtube|youtube search|search youtube for|youtube|find on youtube)\s+(.+)$/);
-  if (ytSearchMatch) {
-    const query = ytSearchMatch[1];
-    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+  const ytSearch = cmd.match(/^(?:search on youtube|youtube search|search youtube(?:\s+for)?|find on youtube)\s+(.+)$/);
+  if (ytSearch) {
+    const query = ytSearch[1];
     return {
       action: "search_web",
       reply: `Searching YouTube for **"${query}"**.`,
-      data: { url, query },
+      data: { url: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`, query },
     };
   }
 
   // ── Play Music ────────────────────────────────────────────────────────────
-  if (cmd.startsWith("play")) {
-    const songName = cmd.replace(/^play\s*/i, "").trim();
+  if (cmd.startsWith("play ")) {
+    const songName = cmd.replace(/^play\s+/i, "").trim();
     const url = musicLibrary[songName];
     if (url) {
-      return {
-        action: "play_music",
-        reply: `Playing **${songName}** for you.`,
-        data: { songName, url },
-      };
+      return { action: "play_music", reply: `Playing **${songName}**.`, data: { songName, url } };
     }
-    // Try fuzzy match
-    const fuzzyMatch = Object.keys(musicLibrary).find(k => k.includes(songName) || songName.includes(k));
-    if (fuzzyMatch) {
-      return {
-        action: "play_music",
-        reply: `Playing **${fuzzyMatch}** for you.`,
-        data: { songName: fuzzyMatch, url: musicLibrary[fuzzyMatch] },
-      };
+    const fuzzy = Object.keys(musicLibrary).find(k => k.includes(songName) || songName.includes(k));
+    if (fuzzy) {
+      return { action: "play_music", reply: `Playing **${fuzzy}**.`, data: { songName: fuzzy, url: musicLibrary[fuzzy] } };
     }
-    return {
-      action: "play_music",
-      reply: `I couldn't find **"${songName}"** in the library. Try checking the AUDIO section for available songs.`,
-      data: { songName, found: false },
-    };
+    return { action: "play_music", reply: `I couldn't find **"${songName}"** in the library. Check the AUDIO section for available songs.`, data: { songName, found: false } };
   }
 
   // ── News ──────────────────────────────────────────────────────────────────
-  if (cmd.match(/\b(news|headlines|what(?:'s| is) happening|latest)\b/)) {
-    return {
-      action: "get_news",
-      reply: "Fetching the latest news headlines for you.",
-    };
+  if (cmd.match(/\b(news|headlines|what(?:'s| is) happening|latest updates?)\b/)) {
+    return { action: "get_news", reply: "Fetching the latest news headlines for you." };
   }
 
   // ── Greetings ─────────────────────────────────────────────────────────────
-  if (cmd.match(/^(hi|hello|hey|good morning|good evening|good afternoon|wassup|sup|what'?s up)\b/)) {
-    const hour = new Date().getHours();
+  if (cmd.match(/^(hi|hello|hey|good morning|good evening|good afternoon|wassup|sup|what'?s up|namaste)\b/)) {
+    const hour = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })).getHours();
     const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-    return {
-      action: "greeting",
-      reply: `${greeting}, sir. All systems are fully operational. How may I assist you today?`,
-    };
+    return { action: "greeting", reply: `${greeting}, sir. All systems operational. How may I assist you today?` };
   }
 
   if (cmd.match(/\bhow are you\b/)) {
-    return {
-      action: "greeting",
-      reply: "All systems nominal, operating at peak efficiency. Ready to assist.",
-    };
+    return { action: "greeting", reply: "All systems nominal, operating at peak efficiency. Ready to assist." };
   }
 
-  // ── Fallthrough to Claude AI ───────────────────────────────────────────────
-  return {
-    action: "ai_chat",
-    reply: "",
-  };
+  // ── Fallthrough to Grok AI ────────────────────────────────────────────────
+  return { action: "ai_chat", reply: "" };
 }
