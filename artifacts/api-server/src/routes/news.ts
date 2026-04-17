@@ -9,56 +9,56 @@ const MOCK_NEWS = [
   {
     title: "AI Advances: New Language Models Achieve Human-Level Reasoning",
     description: "Researchers report breakthrough in artificial general intelligence capabilities.",
-    url: "https://example.com/ai-advances",
+    url: "https://techcrunch.com",
     source: "Tech News Daily",
     publishedAt: new Date().toISOString(),
   },
   {
     title: "SpaceX Launches Next-Generation Satellite Constellation",
     description: "The ambitious project aims to provide global broadband internet coverage.",
-    url: "https://example.com/spacex",
+    url: "https://space.com",
     source: "Space Report",
     publishedAt: new Date(Date.now() - 3600000).toISOString(),
   },
   {
     title: "Global Climate Summit Reaches New Agreement on Emissions",
     description: "World leaders commit to ambitious carbon reduction targets for 2035.",
-    url: "https://example.com/climate",
+    url: "https://bbc.com/news",
     source: "World News",
     publishedAt: new Date(Date.now() - 7200000).toISOString(),
   },
   {
     title: "Quantum Computing Milestone: 1000-Qubit Processor Unveiled",
     description: "The breakthrough promises to revolutionize cryptography and drug discovery.",
-    url: "https://example.com/quantum",
+    url: "https://scientificamerican.com",
     source: "Science Weekly",
     publishedAt: new Date(Date.now() - 10800000).toISOString(),
   },
   {
     title: "Electric Vehicle Sales Surpass Traditional Cars in Major Markets",
     description: "The shift marks a pivotal moment in the transition away from fossil fuels.",
-    url: "https://example.com/ev",
+    url: "https://reuters.com",
     source: "Auto Industry Today",
     publishedAt: new Date(Date.now() - 14400000).toISOString(),
   },
   {
     title: "Breakthrough in Cancer Treatment Using CRISPR Gene Editing",
     description: "Clinical trials show promising results in treating previously incurable cancers.",
-    url: "https://example.com/crispr",
+    url: "https://nature.com",
     source: "Medical Journal",
     publishedAt: new Date(Date.now() - 18000000).toISOString(),
   },
   {
-    title: "New Programming Language Promises 10x Performance Improvement",
-    description: "The language combines the safety of Rust with the simplicity of Python.",
-    url: "https://example.com/programming",
-    source: "Developer Weekly",
+    title: "India Tech Startups Raise Record Funding in Q1 2025",
+    description: "Indian startups attracted over $5 billion in venture capital this quarter.",
+    url: "https://economictimes.com",
+    source: "Economic Times",
     publishedAt: new Date(Date.now() - 21600000).toISOString(),
   },
   {
     title: "Global Tech Giants Agree on AI Safety Standards",
-    description: "Historic agreement sets guidelines for responsible AI development.",
-    url: "https://example.com/ai-safety",
+    description: "Historic agreement sets guidelines for responsible AI development worldwide.",
+    url: "https://wired.com",
     source: "Tech Policy Review",
     publishedAt: new Date(Date.now() - 25200000).toISOString(),
   },
@@ -67,49 +67,56 @@ const MOCK_NEWS = [
 router.get("/news", async (req, res): Promise<void> => {
   const qp = GetNewsQueryParams.safeParse(req.query);
   const limit = qp.success ? (qp.data.limit ?? 10) : 10;
-
   const NEWS_API_KEY = process.env["NEWS_API_KEY"];
 
   if (NEWS_API_KEY) {
     try {
-      const country = qp.success ? (qp.data.country ?? "us") : "us";
-      const response = await fetch(
-        `https://newsapi.org/v2/top-headlines?country=${country}&pageSize=${limit}&apiKey=${NEWS_API_KEY}`,
-      );
+      // NewsData.io API (pub_ prefix keys)
+      const url = `https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en&country=in,us&size=${Math.min(limit, 10)}`;
+      const response = await fetch(url);
       const data = (await response.json()) as {
-        articles?: Array<{
+        status?: string;
+        results?: Array<{
           title?: string;
-          description?: string;
-          url?: string;
-          source?: { name?: string };
-          publishedAt?: string;
+          description?: string | null;
+          content?: string | null;
+          link?: string;
+          source_name?: string;
+          pubDate?: string;
+          image_url?: string | null;
         }>;
+        message?: string;
       };
 
-      if (response.ok && data.articles) {
-        const articles = data.articles.slice(0, limit).map((a) => ({
+      if (response.ok && data.status === "success" && data.results && data.results.length > 0) {
+        const articles = data.results.slice(0, limit).map((a) => ({
           title: a.title ?? "Untitled",
-          description: a.description ?? null,
-          url: a.url ?? "#",
-          source: a.source?.name ?? "Unknown",
-          publishedAt: a.publishedAt ?? new Date().toISOString(),
+          description: a.description ?? a.content?.slice(0, 200) ?? null,
+          url: a.link ?? "#",
+          source: a.source_name ?? "Unknown",
+          publishedAt: a.pubDate ? new Date(a.pubDate).toISOString() : new Date().toISOString(),
         }));
 
         await db.insert(commandHistoryTable).values({
           type: "news",
           input: "get news",
-          response: `Fetched ${articles.length} articles`,
+          response: `Fetched ${articles.length} live articles from NewsData.io`,
           action: "get_news",
         });
 
         res.json(GetNewsResponse.parse({ articles, total: articles.length }));
         return;
       }
+
+      if (data.message) {
+        logger.warn({ msg: data.message }, "NewsData.io returned an error message");
+      }
     } catch (err) {
-      logger.warn({ err }, "NewsAPI request failed, falling back to mock data");
+      logger.warn({ err }, "NewsData.io request failed, falling back to mock data");
     }
   }
 
+  // Fallback to mock data
   const articles = MOCK_NEWS.slice(0, limit);
 
   await db.insert(commandHistoryTable).values({
