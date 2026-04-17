@@ -7,37 +7,36 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Layout } from "@/components/layout";
 
-// Pages
 import AuthPage from "@/pages/auth";
 import Dashboard from "@/pages/dashboard";
 import Chat from "@/pages/chat";
 import MusicPage from "@/pages/music";
 import NewsPage from "@/pages/news";
 import HistoryPage from "@/pages/history";
+import TodosPage from "@/pages/todos";
 
 const queryClient = new QueryClient();
 
-// Protected Route Wrapper
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { token, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center font-mono text-primary text-sm uppercase tracking-widest animate-pulse">
-        Initializing JARVIS Protocol...
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center font-mono text-primary text-sm uppercase tracking-widest gap-4">
+        <div className="flex gap-1.5 items-end h-8">
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="w-1 bg-primary animate-pulse rounded-full"
+              style={{ height: `${20 + i * 8}px`, animationDelay: `${i * 100}ms` }} />
+          ))}
+        </div>
+        <span className="animate-pulse">Initializing JARVIS Protocol...</span>
       </div>
     );
   }
 
-  if (!token) {
-    return <Redirect to="/auth" />;
-  }
+  if (!token) return <Redirect to="/auth" />;
 
-  return (
-    <Layout>
-      <Component />
-    </Layout>
-  );
+  return <Layout><Component /></Layout>;
 }
 
 function Router() {
@@ -45,16 +44,13 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/auth">
-        {token ? <Redirect to="/" /> : <AuthPage />}
-      </Route>
-      
+      <Route path="/auth">{token ? <Redirect to="/" /> : <AuthPage />}</Route>
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/chat" component={() => <ProtectedRoute component={Chat} />} />
       <Route path="/music" component={() => <ProtectedRoute component={MusicPage} />} />
       <Route path="/news" component={() => <ProtectedRoute component={NewsPage} />} />
+      <Route path="/tasks" component={() => <ProtectedRoute component={TodosPage} />} />
       <Route path="/history" component={() => <ProtectedRoute component={HistoryPage} />} />
-      
       <Route component={NotFound} />
     </Switch>
   );
