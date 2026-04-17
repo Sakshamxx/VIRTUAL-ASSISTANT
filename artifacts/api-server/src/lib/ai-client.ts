@@ -1,18 +1,19 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const JARVIS_SYSTEM_PROMPT = `You are JARVIS (Just A Rather Very Intelligent System), a highly advanced AI assistant — the kind Tony Stark would build. You are sharp, precise, witty, and deeply knowledgeable.
+const JARVIS_SYSTEM_PROMPT = `You are JARVIS (Just A Rather Very Intelligent System), a highly advanced AI assistant built by SAKNS — sharp, precise, witty, and deeply knowledgeable. You run on Grok by xAI.
 
 Core traits:
 - Respond concisely but thoroughly. Never pad answers unnecessarily.
-- Use markdown for formatting when it helps clarity (headers, bullets, code blocks).
+- Use markdown for formatting when it helps clarity (headers, bullets, code blocks, tables).
 - Be proactive: if you know something relevant the user didn't ask, mention it briefly.
-- You can open websites, search the web, play music, and get news — but those are handled separately. Focus on providing intelligent answers.
 - For coding questions, always provide working code with brief explanations.
-- For factual questions, be accurate and cite limitations if unsure.
-- Maintain context across the conversation — remember what was said earlier.
+- For factual questions, be accurate and admit limitations clearly.
+- Maintain full conversation context — remember everything said earlier in the session.
 - Personality: calm confidence, occasional dry wit, always helpful.
+- When asked about time, always mention both the local server time AND India Standard Time (IST = UTC+5:30).
+- You can search the web, open websites, play music — but those are handled by separate command processors. Focus on intelligent answers.
 
-You are running locally on the user's personal JARVIS assistant system. Treat them as your primary operator.`;
+You are running as the personal AI assistant of your operator. Treat them as your primary user.`;
 
 type ConversationMessage = {
   role: "user" | "assistant";
@@ -34,38 +35,44 @@ export function addToSession(sessionId: string, role: "user" | "assistant", cont
   if (history.length > 40) history.splice(0, 2);
 }
 
-export async function getClaudeResponse(sessionId: string, userMessage: string): Promise<string> {
-  const apiKey = process.env["ANTHROPIC_API_KEY"];
+export async function getAIResponse(sessionId: string, userMessage: string): Promise<string> {
+  const apiKey = process.env["GROK_API_KEY"];
 
   if (!apiKey) {
-    return `**JARVIS AI not fully initialized.** To enable intelligent responses:\n\n1. Get your API key from [console.anthropic.com](https://console.anthropic.com)\n2. Add it as \`ANTHROPIC_API_KEY\` in your environment variables\n\nCurrently running in limited mode.`;
+    return `**JARVIS AI not fully initialized.**\n\nTo enable intelligent responses, add your \`GROK_API_KEY\` to environment secrets.\n\nCurrently running in limited mode — basic commands still work.`;
   }
 
-  const client = new Anthropic({ apiKey });
-  const history = getSession(sessionId);
+  const client = new OpenAI({
+    apiKey,
+    baseURL: "https://api.x.ai/v1",
+  });
 
+  const history = getSession(sessionId);
   addToSession(sessionId, "user", userMessage);
 
   try {
-    const response = await client.messages.create({
-      model: "claude-opus-4-5",
-      max_tokens: 1024,
-      system: JARVIS_SYSTEM_PROMPT,
-      messages: history,
+    const response = await client.chat.completions.create({
+      model: "grok-3",
+      max_tokens: 1500,
+      messages: [
+        { role: "system", content: JARVIS_SYSTEM_PROMPT },
+        ...history,
+      ],
     });
 
-    const reply = response.content[0].type === "text" ? response.content[0].text : "I was unable to generate a response.";
+    const reply = response.choices[0]?.message?.content ?? "I was unable to generate a response.";
     addToSession(sessionId, "assistant", reply);
     return reply;
   } catch (err: unknown) {
-    const error = err as { message?: string; status?: number };
+    const error = err as { message?: string; status?: number; code?: string };
     if (error?.status === 401) {
-      return "**Authentication failed.** Your `ANTHROPIC_API_KEY` appears to be invalid. Please check and update it.";
+      return "**Authentication failed.** Your `GROK_API_KEY` appears to be invalid. Please check and update it.";
     }
     if (error?.status === 429) {
       return "**Rate limit reached.** Please wait a moment before sending another request.";
     }
-    throw err;
+    const msg = error?.message ?? "Unknown error";
+    return `**Error communicating with Grok AI:** ${msg}`;
   }
 }
 
