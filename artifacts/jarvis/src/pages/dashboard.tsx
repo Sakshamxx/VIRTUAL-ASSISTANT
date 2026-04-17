@@ -195,7 +195,7 @@ export default function Dashboard() {
               ))}
             </div>
             <div className="mt-4 pt-3 border-t border-primary/10 text-[9px] text-primary/30 font-mono uppercase tracking-widest text-center">
-              Powered by Grok · Built by SAKNS
+              Powered by Gemini · Built by SAKNS
             </div>
           </div>
         </div>
