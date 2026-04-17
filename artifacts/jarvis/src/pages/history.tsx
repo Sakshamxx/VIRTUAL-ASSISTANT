@@ -1,87 +1,115 @@
 import { useGetHistory } from "@workspace/api-client-react";
-import { History, MessageSquare, Mic, Music, Newspaper, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { History, MessageSquare, Mic, Music, Newspaper, Loader2, Archive, ListTodo } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 
-const iconMap = {
-  chat: MessageSquare,
-  voice: Mic,
-  music: Music,
-  news: Newspaper
+const TYPE_CONFIG: Record<string, { icon: typeof MessageSquare; color: string; bg: string }> = {
+  chat:  { icon: MessageSquare, color: "text-cyan-400",   bg: "bg-cyan-400/10 border-cyan-400/30" },
+  voice: { icon: Mic,           color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/30" },
+  music: { icon: Music,         color: "text-green-400",  bg: "bg-green-400/10 border-green-400/30" },
+  news:  { icon: Newspaper,     color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
+  todo:  { icon: ListTodo,      color: "text-pink-400",   bg: "bg-pink-400/10 border-pink-400/30" },
 };
 
 export default function HistoryPage() {
-  const { data: history, isLoading } = useGetHistory({ limit: 50 });
+  const { data: history, isLoading } = useGetHistory({ limit: 60 });
+  const [filter, setFilter] = useState<string>("all");
+
+  const filtered = history?.entries.filter(e => filter === "all" || e.type === filter) || [];
+  const types = [...new Set(history?.entries.map(e => e.type) || [])];
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex items-center justify-between border-b border-primary/20 pb-4 shrink-0">
+    <div className="space-y-5 pb-6 flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-start justify-between border-b border-primary/20 pb-5 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-primary tracking-widest uppercase text-glow">Command Logs</h1>
-          <p className="text-muted-foreground text-xs uppercase tracking-wider">System activity archive</p>
+          <motion.h1 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+            className="text-xl font-bold text-primary tracking-widest uppercase text-glow flex items-center gap-2">
+            <Archive className="w-5 h-5" /> System Logs
+          </motion.h1>
+          <p className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">Full operator activity archive</p>
         </div>
-        <div className="text-xs font-mono text-primary/50 bg-primary/10 px-3 py-1 border border-primary/20">
-          RECORDS: {history?.total || 0}
+        <div className="flex items-center gap-2 font-mono text-[10px]">
+          <span className="text-primary/40 uppercase tracking-widest">Records:</span>
+          <span className="text-primary font-bold">{String(history?.total || 0).padStart(4, "0")}</span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto pr-4 font-mono">
+      {/* Type filter */}
+      <div className="flex gap-1.5 flex-wrap shrink-0">
+        <button onClick={() => setFilter("all")}
+          className={`px-3 py-1 text-[10px] font-mono uppercase tracking-wider border transition-all ${filter === "all" ? "border-primary/50 bg-primary/10 text-primary" : "border-primary/10 text-muted-foreground hover:border-primary/30"}`}>
+          All ({history?.total || 0})
+        </button>
+        {types.map(type => {
+          const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.chat;
+          const count = history?.entries.filter(e => e.type === type).length || 0;
+          return (
+            <button key={type} onClick={() => setFilter(type)}
+              className={`px-3 py-1 text-[10px] font-mono uppercase tracking-wider border transition-all ${filter === type ? `${cfg.bg} ${cfg.color}` : "border-primary/10 text-muted-foreground hover:border-primary/30"}`}>
+              {type} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Log list */}
+      <div className="flex-1 overflow-auto">
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <p className="text-xs font-mono text-primary/50 uppercase tracking-widest animate-pulse">Loading archive...</p>
           </div>
         ) : (
-          <div className="space-y-4 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-primary/20 before:to-transparent">
-            {history?.entries.map((entry, i) => {
-              const Icon = iconMap[entry.type as keyof typeof iconMap] || History;
-              
-              return (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.02 }}
-                  key={entry.id}
-                  className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group"
-                >
-                  {/* Icon Node */}
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-primary/50 bg-black text-primary/80 group-hover:border-primary group-hover:text-primary transition-colors shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
-                    <Icon className="w-3 h-3" />
-                  </div>
-                  
-                  {/* Card */}
-                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2rem)] p-4 bg-black/60 border border-primary/20 hud-border hover:border-primary/50 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] uppercase tracking-widest text-primary/50 px-2 py-0.5 bg-primary/10 border border-primary/20">
-                        {entry.type}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {format(new Date(entry.createdAt), 'MMM dd - HH:mm:ss')}
-                      </span>
-                    </div>
-                    
-                    <div className="mb-2">
-                      <span className="text-xs text-muted-foreground block mb-1">INPUT:</span>
-                      <p className="text-sm text-foreground truncate">{entry.input}</p>
-                    </div>
-                    
-                    <div>
-                      <span className="text-xs text-primary/50 block mb-1">OUTPUT:</span>
-                      <p className="text-sm text-primary/90 line-clamp-2">{entry.response}</p>
+          <div className="space-y-2">
+            <AnimatePresence>
+              {filtered.map((entry, i) => {
+                const cfg = TYPE_CONFIG[entry.type] || TYPE_CONFIG.chat;
+                const Icon = cfg.icon;
+                const date = (() => {
+                  try {
+                    return new Date(entry.createdAt).toLocaleString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                      day: "numeric", month: "short",
+                      hour: "2-digit", minute: "2-digit", hour12: true,
+                    });
+                  } catch { return "—"; }
+                })();
+
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.015 }}
+                    className="group flex gap-3 p-3 border border-primary/10 bg-black/40 hover:border-primary/30 hover:bg-black/60 transition-all"
+                  >
+                    {/* Icon */}
+                    <div className={`shrink-0 w-8 h-8 flex items-center justify-center border ${cfg.bg} ${cfg.color}`}>
+                      <Icon className="w-3.5 h-3.5" />
                     </div>
 
-                    {entry.action && entry.action !== 'none' && (
-                      <div className="mt-3 pt-2 border-t border-primary/10 text-[10px] uppercase tracking-widest text-primary">
-                        ACTION EXECUTED: {entry.action}
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 font-mono">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 border ${cfg.bg} ${cfg.color}`}>{entry.type}</span>
+                        {entry.action && entry.action !== "none" && (
+                          <span className="text-[9px] uppercase tracking-widest text-primary/40 border border-primary/10 px-1.5 py-0.5">{entry.action}</span>
+                        )}
+                        <span className="text-[9px] text-muted-foreground/40 ml-auto">{date}</span>
                       </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-            
-            {(!history?.entries || history.entries.length === 0) && (
-              <div className="text-center text-muted-foreground uppercase tracking-widest py-12 relative z-10 bg-background/80 backdrop-blur-sm border border-dashed border-primary/20 w-fit mx-auto px-8">
-                No logs recorded
+                      <p className="text-xs text-foreground/90 truncate">{entry.input}</p>
+                      <p className="text-[11px] text-muted-foreground/50 truncate mt-0.5">{entry.response}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+
+            {filtered.length === 0 && (
+              <div className="border border-dashed border-primary/20 py-16 text-center">
+                <History className="w-8 h-8 text-primary/20 mx-auto mb-3" />
+                <p className="text-muted-foreground text-xs font-mono uppercase tracking-widest">No logs recorded yet.</p>
               </div>
             )}
           </div>
