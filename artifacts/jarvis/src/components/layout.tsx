@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Cpu, MessageSquare, Music, Newspaper, History, LogOut } from "lucide-react";
+import { MessageSquare, Music, Newspaper, History, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 
@@ -8,7 +8,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
 
   const navItems = [
-    { href: "/", label: "SYSTEM", icon: Cpu },
+    { href: "/", label: "SYSTEM", icon: LayoutDashboard },
     { href: "/chat", label: "COMMS", icon: MessageSquare },
     { href: "/music", label: "AUDIO", icon: Music },
     { href: "/news", label: "INTEL", icon: Newspaper },
@@ -23,8 +23,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-none bg-primary/20 border border-primary flex items-center justify-center animate-pulse">
-              <Cpu className="w-5 h-5 text-primary" />
+            <div className="w-11 h-11 rounded-full border-2 border-primary overflow-hidden shadow-[0_0_12px_rgba(0,200,220,0.5)] shrink-0">
+              <img src="/avatar.jpeg" alt="JARVIS" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="text-primary font-bold text-lg leading-none tracking-widest text-glow">J.A.R.V.I.S.</div>

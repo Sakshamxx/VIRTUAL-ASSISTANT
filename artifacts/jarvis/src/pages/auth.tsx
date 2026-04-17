@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useRegister, useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cpu, TerminalSquare, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,8 +56,8 @@ export default function AuthPage() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 bg-noise font-mono relative overflow-hidden">
       
       {/* Decorative background elements */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none">
-        <Cpu className="w-[80vw] h-[80vw]" />
+      <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none">
+        <img src="/avatar.jpeg" alt="" className="w-[70vw] h-[70vw] object-cover rounded-full blur-sm" />
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -74,8 +74,8 @@ export default function AuthPage() {
           <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary" />
 
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border border-primary mb-4 animate-pulse">
-              <TerminalSquare className="w-8 h-8 text-primary" />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-primary mb-4 overflow-hidden shadow-[0_0_20px_rgba(0,200,220,0.4)]">
+              <img src="/avatar.jpeg" alt="JARVIS" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-2xl font-bold tracking-widest text-primary text-glow uppercase">
               J.A.R.V.I.S.
