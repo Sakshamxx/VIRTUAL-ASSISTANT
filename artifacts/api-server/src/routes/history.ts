@@ -1,6 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, commandHistoryTable } from "@workspace/db";
-import { desc, sql, count } from "drizzle-orm";
+import { historyStore } from "@workspace/db";
 import { GetHistoryQueryParams, GetHistoryResponse, GetActivityStatsResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -9,15 +8,8 @@ router.get("/history", async (req, res): Promise<void> => {
   const qp = GetHistoryQueryParams.safeParse(req.query);
   const limit = qp.success ? (qp.data.limit ?? 50) : 50;
 
-  const entries = await db
-    .select()
-    .from(commandHistoryTable)
-    .orderBy(desc(commandHistoryTable.createdAt))
-    .limit(limit);
-
-  const [{ total }] = await db
-    .select({ total: count() })
-    .from(commandHistoryTable);
+  const entries = historyStore.getRecent(limit);
+  const total = historyStore.count();
 
   res.json(
     GetHistoryResponse.parse({
@@ -35,39 +27,12 @@ router.get("/history", async (req, res): Promise<void> => {
 });
 
 router.get("/history/stats", async (_req, res): Promise<void> => {
-  const [{ totalCommands }] = await db
-    .select({ totalCommands: count() })
-    .from(commandHistoryTable);
-
-  const [{ totalChats }] = await db
-    .select({ totalChats: count() })
-    .from(commandHistoryTable)
-    .where(sql`${commandHistoryTable.type} = 'chat'`);
-
-  const [{ totalVoice }] = await db
-    .select({ totalVoice: count() })
-    .from(commandHistoryTable)
-    .where(sql`${commandHistoryTable.type} = 'voice'`);
-
-  const [{ totalMusic }] = await db
-    .select({ totalMusic: count() })
-    .from(commandHistoryTable)
-    .where(sql`${commandHistoryTable.type} = 'music'`);
-
-  const [{ totalNews }] = await db
-    .select({ totalNews: count() })
-    .from(commandHistoryTable)
-    .where(sql`${commandHistoryTable.type} = 'news'`);
-
-  const actionCounts = await db
-    .select({
-      action: commandHistoryTable.action,
-      count: count(),
-    })
-    .from(commandHistoryTable)
-    .groupBy(commandHistoryTable.action)
-    .orderBy(desc(count()))
-    .limit(5);
+  const totalCommands = historyStore.count();
+  const totalChats = historyStore.countByType("chat");
+  const totalVoice = historyStore.countByType("voice");
+  const totalMusic = historyStore.countByType("music");
+  const totalNews = historyStore.countByType("news");
+  const actionCounts = historyStore.topActions(5);
 
   res.json(
     GetActivityStatsResponse.parse({
@@ -76,9 +41,7 @@ router.get("/history/stats", async (_req, res): Promise<void> => {
       totalVoiceCommands: totalVoice,
       totalMusicPlayed: totalMusic,
       totalNewsRequests: totalNews,
-      mostUsedCommands: actionCounts
-        .filter((a) => a.action != null)
-        .map((a) => ({ action: a.action!, count: a.count })),
+      mostUsedCommands: actionCounts,
     }),
   );
 });

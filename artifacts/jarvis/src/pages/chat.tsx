@@ -213,7 +213,7 @@ export default function Chat() {
                   </div>
                 ) : (
                   <div className="w-7 h-7 rounded-full border border-primary/20 overflow-hidden">
-                    <img src="/sakns-avatar.jpeg" alt="You" className="w-full h-full object-cover" />
+                    <img src="/saksham-avatar.jpeg" alt="You" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
@@ -224,7 +224,7 @@ export default function Chat() {
                   <span className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-widest">
                     {msg.role === "user" ? (
                       <span className="flex items-center gap-1">
-                        SAKNS {msg.isVoice && <Mic className="w-2.5 h-2.5 text-purple-400" />}
+                        Saksham Chauhan {msg.isVoice && <Mic className="w-2.5 h-2.5 text-purple-400" />}
                       </span>
                     ) : "J.A.R.V.I.S."}
                   </span>
