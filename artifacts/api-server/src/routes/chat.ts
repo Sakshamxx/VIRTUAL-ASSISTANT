@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, commandHistoryTable } from "@workspace/db";
+import { historyStore } from "@workspace/db";
 import {
   SendChatBody,
   SendChatResponse,
@@ -33,15 +33,10 @@ router.post("/chat", async (req, res): Promise<void> => {
   } else {
     reply = result.reply;
     addToSession(session, "user", message);
-    addToSession(session, "assistant", reply);
+    addToSession(session, "model", reply);
   }
 
-  await db.insert(commandHistoryTable).values({
-    type: "chat",
-    input: message,
-    response: reply,
-    action,
-  });
+  historyStore.insert({ type: "chat", input: message, response: reply, action });
 
   res.json(SendChatResponse.parse({ reply, sessionId: session, timestamp: now.toISOString() }));
 });
@@ -65,12 +60,7 @@ router.post("/voice-command", async (req, res): Promise<void> => {
     action = "ai_chat";
   }
 
-  await db.insert(commandHistoryTable).values({
-    type: "voice",
-    input: command,
-    response: reply,
-    action,
-  });
+  historyStore.insert({ type: "voice", input: command, response: reply, action });
 
   res.json(VoiceCommandResponse.parse({
     action,

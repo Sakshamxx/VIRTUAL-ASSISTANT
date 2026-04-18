@@ -1,6 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { userStore } from "@workspace/db";
 import { RegisterBody, LoginBody, GetMeResponse, LoginResponse } from "@workspace/api-zod";
 import { createHash } from "crypto";
 import jwt from "jsonwebtoken";
@@ -26,22 +25,13 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
   const { username, password } = parsed.data;
 
-  const existing = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.username, username))
-    .limit(1);
-
-  if (existing.length > 0) {
+  const existing = userStore.findByUsername(username);
+  if (existing) {
     res.status(400).json({ error: "Username already taken" });
     return;
   }
 
-  const [user] = await db
-    .insert(usersTable)
-    .values({ username, passwordHash: hashPassword(password) })
-    .returning();
-
+  const user = userStore.create({ username, passwordHash: hashPassword(password) });
   const token = signToken(user.id, user.username);
 
   res.status(201).json(
@@ -64,12 +54,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   }
 
   const { username, password } = parsed.data;
-
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.username, username))
-    .limit(1);
+  const user = userStore.findByUsername(username);
 
   if (!user || user.passwordHash !== hashPassword(password)) {
     res.status(401).json({ error: "Invalid credentials" });
@@ -107,12 +92,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     return;
   }
 
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, payload.id))
-    .limit(1);
-
+  const user = userStore.findById(payload.id);
   if (!user) {
     res.status(401).json({ error: "User not found" });
     return;

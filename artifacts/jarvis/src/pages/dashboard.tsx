@@ -1,4 +1,4 @@
-import { useGetActivityStats, useHealthCheck } from "@workspace/api-client-react";
+import { useGetActivityStats, useHealthCheck, getHealthCheckQueryKey } from "@workspace/api-client-react";
 import { Activity, Zap, Command, MessageSquare, Mic, Music, Newspaper, Globe, Github, Youtube, BookOpen, Search, ExternalLink } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from "recharts";
 import { motion } from "framer-motion";
@@ -35,7 +35,7 @@ const QUICK_LINKS = [
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useGetActivityStats();
-  const { data: health } = useHealthCheck({ query: { refetchInterval: 15000 } });
+  const { data: health } = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey(), refetchInterval: 15000 } });
   const { time, date } = useISTClock();
   const [, navigate] = useLocation();
 
@@ -55,7 +55,7 @@ export default function Dashboard() {
           <motion.h1 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="text-xl font-bold text-primary tracking-widest uppercase text-glow">
             Command Centre
           </motion.h1>
-          <p className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">J.A.R.V.I.S. — Built by SAKNS</p>
+          <p className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">J.A.R.V.I.S. — Built by Saksham Chauhan</p>
         </div>
         <div className="flex items-center gap-3 text-xs font-mono">
           <span className={`flex items-center gap-1.5 px-2 py-1 border ${health?.status === "ok" ? "text-green-400 border-green-400/30 bg-green-400/5" : "text-red-400 border-red-400/30"}`}>
@@ -195,7 +195,7 @@ export default function Dashboard() {
               ))}
             </div>
             <div className="mt-4 pt-3 border-t border-primary/10 text-[9px] text-primary/30 font-mono uppercase tracking-widest text-center">
-              Powered by Gemini · Built by SAKNS
+              Powered by Tech-Verse · Built by Saksham Chauhan
             </div>
           </div>
         </div>

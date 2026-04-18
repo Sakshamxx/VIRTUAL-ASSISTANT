@@ -78,7 +78,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {/* Saksham Chauhan */}
           <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
             <div className="w-7 h-7 rounded-full overflow-hidden border border-primary/30 shrink-0">
-              <img src="/sakns-avatar.jpeg" alt="Saksham" className="w-full h-full object-cover" />
+              <img src="/saksham-avatar.jpeg" alt="Saksham" className="w-full h-full object-cover" />
             </div>
             <AnimatePresence>
               {!collapsed && (
@@ -100,7 +100,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {!collapsed && (
             <div className="text-[9px] text-primary/20 uppercase tracking-widest text-center pt-1 border-t border-primary/5">
-              Built by SAKNS · Powered by Grok
+              Built by Saksham Chauhan · Powered by Tech-Verse
             </div>
           )}
         </div>

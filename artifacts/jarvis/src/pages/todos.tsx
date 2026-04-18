@@ -93,7 +93,7 @@ export default function TodosPage() {
             className="text-xl font-bold text-primary tracking-widest uppercase text-glow flex items-center gap-2">
             <ListTodo className="w-5 h-5" /> Task Matrix
           </motion.h1>
-          <p className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">Operator directive queue — Built by SAKNS</p>
+          <p className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">Operator directive queue — Built by Saksham Chauhan</p>
         </div>
         <div className="text-right font-mono text-[10px] text-primary/40 uppercase tracking-widest">
           <div>{stats.done}/{stats.total} complete</div>
